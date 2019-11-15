@@ -1,5 +1,5 @@
 from flask_sqlalchemy import SQLAlchemy
-from flask import Flask, render_template
+from flask import Flask, render_template, request, flash, redirect, url_for
 from flask_login import UserMixin, LoginManager, login_required, login_user, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -54,6 +54,24 @@ db.create_all()
 @app.route('/')
 def root():
     return render_template('views/index.html')
+
+
+@app.route('/register', methods=['POST', 'GET'])
+def register():
+    if request.method == 'POST':
+        check_email = User.query.filter_by(email=request.form['email']).first()
+        if check_email:
+            flash('Email already taken', 'warning')
+            return redirect(url_for('register'))
+        new_user = User(name=request.form['name'],
+                        email=request.form['email'])
+        new_user.generate_password(request.form['password'])
+        db.session.add(new_user)
+        db.session.commit()
+        login_user(new_user)
+        flash('Successfully create an account and logged in', 'success')
+        return redirect(url_for('root'))
+    return render_template('views/register.html')
 
 
 if __name__ == "__main__":
