@@ -1,5 +1,5 @@
 from flask_sqlalchemy import SQLAlchemy
-from flask import Flask
+from flask import Flask, render_template
 from flask_login import UserMixin, LoginManager, login_required, login_user, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -49,6 +49,11 @@ class Comment(db.Model):
 
 
 db.create_all()
+
+
+@app.route('/')
+def root():
+    return render_template('views/index.html')
 
 
 if __name__ == "__main__":
