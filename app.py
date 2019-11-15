@@ -10,8 +10,6 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///flaskbook.db'
 
 db = SQLAlchemy(app)
 
-login_manager = LoginManager(app)
-
 
 class User(UserMixin, db.Model):
     __tablename__ = 'users'
@@ -51,6 +49,17 @@ class Comment(db.Model):
 db.create_all()
 
 
+login_manager = LoginManager(app)
+
+
+@login_manager.user_loader
+def load_user(id):
+    return User.query.get(id)
+
+
+login_manager.login_view = 'login'
+
+
 @app.route('/')
 def root():
     return render_template('views/index.html')
@@ -58,6 +67,8 @@ def root():
 
 @app.route('/register', methods=['POST', 'GET'])
 def register():
+    if current_user.is_authenticated:
+        return redirect(url_for('root'))
     if request.method == 'POST':
         check_email = User.query.filter_by(email=request.form['email']).first()
         if check_email:
@@ -72,6 +83,31 @@ def register():
         flash('Successfully create an account and logged in', 'success')
         return redirect(url_for('root'))
     return render_template('views/register.html')
+
+
+@app.route('/login', methods=['POST', 'GET'])
+def login():
+    if current_user.is_authenticated:
+        return redirect(url_for('root'))
+    if request.method == 'POST':
+        user = User.query.filter_by(email=request.form['email']).first()
+        if not user:
+            flash('Email is not registered', 'warning')
+            return redirect(url_for('register'))
+        if user.check_password(request.form['password']):
+            login_user(user)
+            flash(f'Welcome back {current_user.name} !', 'success')
+            return redirect(url_for('root'))
+        flash('wrong password or email', 'warning')
+        return redirect(url_for('login'))
+    return render_template('views/login.html')
+
+
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    return redirect(url_for('login'))
 
 
 if __name__ == "__main__":
