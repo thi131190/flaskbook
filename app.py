@@ -128,8 +128,8 @@ def create_post():
 @app.route('/posts/<id>', methods=['POST', 'GET'])
 def single_post(id):
     action = request.args.get('action')
-    print(action)
     post = Post.query.get(id)
+    comments = Comment.query.filter_by(post_id=id).all()
     if not post:
         flash('Post not found', 'warning')
         return redirect(url_for('root'))
@@ -150,7 +150,52 @@ def single_post(id):
             return render_template('views/single_post.html', post=post, action=action)
     if not action:
         action = 'view'
-    return render_template('views/single_post.html', post=post, action=action)
+    for comment in comments:
+        comment.user_name = User.query.get(comment.user_id).name
+    return render_template('views/single_post.html', post=post, action=action, comments=comments)
+
+
+@app.route('/posts/<id>/comments', methods=['POST', 'GET'])
+def create_comment(id):
+
+    action = request.args.get('action')
+    post = Post.query.get(id)
+    if not post:
+        flash('Post not found', 'warning')
+        return redirect(url_for('root'))
+
+    if request.method == "POST":
+        comment = Comment(user_id=current_user.id, post_id=id,
+                          body=request.form['body'])
+        db.session.add(comment)
+        db.session.commit()
+        flash('Thanks for your comment', 'success')
+    return redirect(url_for('single_post', id=id, action='view'))
+
+
+@app.route('/posts/<id>/comments/<comment_id>', methods=['POST', 'GET'])
+def edit_comment(id, comment_id):
+    action = request.args.get('action')
+    comment = Comment.query.get(comment_id)
+    print('ACTION', action)
+    print("Method", request.method)
+    if request.method == 'POST':
+        if comment.user_id != current_user.id:
+            flash('not allow to do this', 'danger')
+            return redirect(url_for('root'))
+        if action == 'update':
+            print("edit comment")
+            comment.body = request.form['body']
+            db.session.commit()
+            return redirect(url_for('single_post', id=id, action='view'))
+        if action == 'edit':
+            return render_template('views/edit_comment.html', comment=comment, action=action)
+        if action == 'delete':
+            print('deleting...')
+            db.session.delete(comment)
+            db.session.commit()
+            return redirect(url_for('single_post', id=comment.post_id))
+    return render_template('views/edit_comment.html', comment=comment)
 
 
 if __name__ == "__main__":

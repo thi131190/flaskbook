@@ -1,0 +1,66 @@
+<div class=" container view-area">
+    <div class="col-md-12 col-md-offset-2 container">
+        <div class="comment-wrapper">
+            <div class="panel panel-info">
+                <div class="panel-heading">
+                    <h4 class="comment-title">Comments</h4>
+                </div>
+                <div>
+                    <form method='POST' class='create-post-form' action="{{url_for('create_comment', id=post.id)}}">
+                        <textarea name="body" class="form-control form-post-area" id="exampleFormControlTextarea1"
+                            placeholder="Write a comment..." rows="3"></textarea>
+                        <br>
+                        <div style="width:100%; display:flex; justify-content:center">
+                            <button type="submit" class="btn btn-post-comment">Send</button>
+                        </div>
+                    </form>
+                    <div class="clearfix"></div>
+
+                    <ul class="media-list">
+                        {% for comment in comments %}
+                        <li class="media container col-md-12 ">
+
+                            <div class="media-body">
+                                <div class="single-post-footer">
+                                    <div>
+                                        <strong class="comment-user-name">{{comment.user_name}}</strong>
+                                    </div>
+                                    <div>
+                                        <small class="text-muted">{{comment.created_at}}</small>
+                                    </div>
+                                </div>
+                                <p>{{comment.body}}</p>
+                                {% if comment.user_id == current_user.id %}
+                                <div class="single-post-footer">
+                                    <span>
+                                        <form method="POST"
+                                            action="{{url_for('edit_comment', id= comment.post_id, comment_id = comment.id, action='edit')}}">
+                                            <button class='btn btn-link' type="submit"
+                                                action="{{url_for('edit_comment', id= comment.post_id, comment_id = comment.id, action='edit')}}">Edit
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                        </form>
+                                    </span>
+                                    <span>
+                                        <form method="POST"
+                                            action="{{url_for('edit_comment', id= comment.post_id, comment_id = comment.id, action='delete')}}">
+                                            <button class='btn btn-link' type="submit">Delete
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    </span>
+                                </div>
+                                {% endif %}
+
+                            </div>
+
+                        </li>
+                        <hr />
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
